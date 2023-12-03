@@ -25,7 +25,7 @@
     }
   ],
   "paths": {
-    "/email/messages": {
+    "/mails/send": {
       "post": {
         "description": "The endpoint is invoked for sending an eMail to one or more users.",
         "operationId": "email.post",
@@ -120,7 +120,9 @@
             }
           }
         }
-      },
+      }
+    },
+    "/mails/": {
       "get": {
         "summary": "Fetch a list of eMails belonging to the user. The same API endpoint is used for fetching the eMails RECEIVED, SENT, DRAFT and OUTBOX.",
         "operationId": "email.get",
@@ -246,21 +248,26 @@
   "definitions": {
     "recipient_detail": {
       "type": "object",
-      "title": "eMail recipient Ids",
+      "title": "recipient_detail",
       "description": "The list of to,cc,bcc mail Ids that needs to be added",
       "required": [
-        "to_mail_ids",
-        "cc_mail_ids"
+        "recipient_to"
       ],
       "properties": {
-        "to_mail_ids": {
+        "recipient_to": {
           "description": "The 'to' list of email Ids to which the email need to be sent.",
           "type": "array",
           "items": {
             "$ref": "#/definitions/email_address"
           }
         },
-        "cc_mail_ids": {
+        "recipient_cc": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/email_address"
+          }
+        },
+        "recipient_bcc": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/email_address"
@@ -270,7 +277,7 @@
     },
     "message_search_response": {
       "type": "object",
-      "title": "eMail content for sending to the user",
+      "title": "message_search_response",
       "description": "eMail message payload",
       "required": [
         "message_id"
@@ -302,6 +309,30 @@
         }
       }
     },
+    "content_mime": {
+      "type": "string",
+      "description": "Type of Content",
+      "minLength": 1,
+      "maxLength": 256,
+      "x-enum": [
+        {
+          "value": "TEXT",
+          "description": "The eMail message is in saved to be sent for later."
+        },
+        {
+          "value": "PNG",
+          "description": "The eMail message is successfully sent."
+        },
+        {
+          "value": "ZIP",
+          "description": "The eMail message received successfully and is in user mailbox."
+        },
+        {
+          "value": "XLS",
+          "description": "The eMail is sent by the user but waiting in outbox due to technical reason."
+        }
+      ]
+    },
     "message_status": {
       "type": "string",
       "description": "Status of the message",
@@ -328,7 +359,7 @@
     },
     "message_response": {
       "type": "object",
-      "title": "eMail content for sending to the user",
+      "title": "message_response",
       "description": "eMail message payload",
       "required": [
         "id"
@@ -340,8 +371,8 @@
           "minItems": 1,
           "maxItems": 36
         },
-        "status": {
-          "description": "If the eMail is in one of the following states. Ex: DRAFT, SENT, OUTBOX",
+        "mail_location": {
+          "description": "If the eMail is in one of the following states. Ex: INBOX, DRAFT, SENT and OUTBOX",
           "$ref": "#/definitions/message_status"
         },
         "content": {
@@ -349,21 +380,35 @@
         }
       }
     },
-    "message_payload": {
+    "message_content": {
       "type": "object",
       "description": "The body the eMail",
-      "title": "eMail content for sending to the user",
+      "title": "message_content",
+      "properties": {
+        "content_type": {
+          "$ref": "#/definitions/content_mime",
+          "type": "string",
+          "minLength": 1
+        },
+        "content_details": {
+          "type": "object",
+        }
+      }
+    },
+    "message": {
+      "type": "object",
+      "description": "The body the eMail",
+      "title": "message",
       "properties": {
         "subject": {
           "type": "string",
           "minLength": 1
         },
-        "content_type": {
-          "type": "string",
-          "minLength": 1
-        },
-        "content_details": {
-          "type": "object"
+        "contents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/content_detail"
+          }
         }
       }
     },
@@ -388,25 +433,25 @@
     },
     "message_request": {
       "type": "object",
-      "title": "eMail content for sending to the user",
+      "title": "message_request",
       "description": "eMail message payload",
       "required": [
         "recipient_details"
       ],
       "properties": {
-        "sender_details": {
+        "message_from": {
           "description": "The list of email Ids to which the email need to be sent.",
           "type": "object",
           "$ref": "#/definitions/email_address"
         },
-        "recipient_details": {
+        "message_recipient": {
           "description": "The list of recipient ids to which the eMail need to be sent.",
           "$ref": "#/definitions/recipient_detail"
         },
-        "content_details": {
+        "message_body": {
           "description": "The list of email Ids to which the email need to be sent.",
           "type": "object",
-          "$ref": "#/definitions/message_payload"
+          "$ref": "#/definitions/message"
         }
       }
     }
